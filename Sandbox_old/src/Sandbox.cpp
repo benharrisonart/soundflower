@@ -16,25 +16,26 @@
 
 const  int PIXELCOUNT = 60;
 const int PIXELPIN = D3;
-int PIXELDELAY = 40;
+int PIXELDELAY = 100;
 Adafruit_NeoPixel pixel(PIXELCOUNT, PIXELPIN, WS2812B);
 
 int bri = 10;
 int i;
-int j; // for pixel circle circumfrance
-int k; 
-int m; // for comet trail
+int j;
+int k;
+int m;
 
-int rnd_r; int rnd_g; int rnd_b; // color variables for fading pixels
+int rnd_r;
+int rnd_g;
+int rnd_b;
 
 int rndColor;
-int briansColor; // Brian Rashap code 
 
 //BUTTON
+//bool buttonState;//on or off
 const int BTNPIN = 17;
 Button btnColor(BTNPIN);
 
-// COLOR WHEEL
 uint32_t Wheel(byte WheelPos);
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -50,33 +51,56 @@ void setup() {
     pixel.setPixelColor(1,Wheel(rndColor));
     pixel.setBrightness(bri);
     pixel.show();
+
 }
 
+
+
 void loop() {
-    //PIXELS INIT 
-    bri = 255;
+    //pixel.setPixelColor(i, Wheel(random(255)));
+    //for(i=0;i<60;i++){pixel.setPixelColor(i,Wheel(random(255)));}pixel.show();
+    //delay(5000);
+    
+    bri = 10;
     pixel.setBrightness(bri);
     pixel.show();
+    //for(i=0;i<60;i++){pixel.setPixelColor(i,rnd_r, rnd_g, rnd_b);}pixel.show();
+    for(i=0;i<60;i++){pixel.setPixelColor(i,Wheel(rndColor));}pixel.show();
 
-    for (j=10; j<= 60; j++){
-        briansColor = Wheel(rndColor);
-        rnd_r = briansColor >>16;
-        rnd_g = briansColor >> 8 & 0xFF;
-        rnd_b = briansColor & 0xFF;
+    for (j=0; j<= 60; j++){
+        
         for(m=0;m<=8;m++){
-            pixel.setPixelColor(j-m, rnd_r/(m*4), rnd_g/(m*4), rnd_b/(m*4));
+            pixel.setPixelColor(j-m, Wheel(rndColor),255/m*4,255/m*4);
         }
-        pixel.show(); //display the current pixel comet
-        delay(PIXELDELAY); // chill out the pixel motion animation
+    pixel.show();
+
+    Serial.printf("rndColor %i\n",rndColor);
+    Serial.printf("(rndColor)/2 %i\n",(rndColor)/2);
+    Serial.printf("(rndColor/2) %i\n",(rndColor/2));
+
+
+        delay(PIXELDELAY);
         pixel.clear(); //clear requires 'show' to display as 'off'
         pixel.show();
         if(btnColor.isClicked()) {
             Serial.printf ("Button clicked \n");
+            bri = 255;
+            PIXELDELAY = 80;
+           // rnd_r = random(255); rnd_g = random(255);rnd_b = random(255);
             rndColor = random(255);
-            Serial.printf("rndColor %i: Wheel 0x%06X\n",rndColor,Wheel(rndColor));
             pixel.setBrightness(bri);
             pixel.show();
         }
+
+    }
+    
+    k++;
+    if(k>2){
+        k=0;
+        PIXELDELAY = 80;
+        rnd_r = random(255); rnd_g = random(255);rnd_b = random(255);
+    }else{
+       PIXELDELAY = 40; 
     }
 }
 // Input a value 0 to 255 to get a color value.
@@ -93,16 +117,10 @@ uint32_t Wheel(byte WheelPos) {
   }
 }
 
-// END CODE
 
-// JUNKPILE 
 
-    //for(i=0;i<60;i++){pixel.setPixelColor(i,rnd_r, rnd_g, rnd_b);}pixel.show(); // prewheel
-    //for(i=0;i<60;i++){pixel.setPixelColor(i,Wheel(rndColor));}pixel.show();
 
-    //pixel.setPixelColor(j-m, Wheel(rndColor),255/m*4,255/m*4); // original wheel attempt
 
-    //bool buttonState;//on or off
 
         // pixel.setPixelColor(j, Wheel(rndColor));
         // pixel.setPixelColor(j-1, Wheel(rndColor/2));
