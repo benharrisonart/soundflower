@@ -8,17 +8,38 @@
 #include "Particle.h"
 #include "IoTClassroom_CNM.h"// includes Button.h and Colors.h and wemo.h
 #include "iostream" // for arrays
+#include "neopixel.h"
+#include "Colors.h"//included in IoTClassroom_CNM so Don't Install
+#include "Adafruit_SSD1306.h"
+#include "Adafruit_GFX.h" //dont install .. part of SSD1306
 
 // connect to the Particle Cloud
 SYSTEM_MODE(SEMI_AUTOMATIC);
+Adafruit_NeoPixel pixel(60, D2, WS2812B);//Argon
+//Adafruit_NeoPixel pixel(PIXELCOUNT, SPI1, WS2812B);//Photon
 
+//VARIABLES
+int i; int j;
+int currentTime; int lastTime;
+//PIXELS
+int vPix = 3;
+
+//AUDIO
 const int audioPin = A5;
 int vSound;
-int i; int j;
 int vSamples = 512; // number of samples taken per time period
 float aSamples[512]; // used to temp store each sample to add to array
-int currentTime; int lastTime;
 float maxFreq = 13.0;
+
+//OLED
+const int OLED_RESET=-1;
+Adafruit_SSD1306 display(-1);
+
+//BUTTON
+bool buttonState;//on or off
+const int BTNPIN = 17;
+Button btnVolumeOff(BTNPIN);
+
 
 //functions
 void calculateDFT(float *xn, int len);
@@ -27,17 +48,29 @@ void calculateDFT(float *xn, int len);
 void setup() {
   Serial.begin(9600);
   pinMode(audioPin, INPUT);
+  // PIXELS
+    pixel.begin();
+    pixel.setBrightness(bri);
+    for(i=0;i<60;i++){pixel.setPixelColor(i,122,66,200);}
+    pixel.show();
+    //OLED
+    display.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    //display.printf("Hello World!\n");
+    //display.printf("Note: %c\n",arrNote[3]);
+    display.setTextSize(2);
+    display.setCursor(0,0);
+    display.printf("P1 Ready");
+    display.setCursor(0,23);
+    display.printf("P2 Ready");
+    display.setCursor(0,46);
+    display.printf("P3 Ready");
+    display.display();
+
 }
 
-void loop() {
-  // vSound = analogRead(audioPin);
-  // Serial.printf("vSound - %i\n",vSound);
-  // if (vSound>2000){
-  //   delay(1000);
-  // }else{
-  //   delay(100);
-  // }
-  
+void loop() { 
     while (i<vSamples){
       //Serial.printf("i = %i\n", i);
       currentTime = micros();
@@ -80,8 +113,11 @@ void loop() {
 
   Serial.printf("MaxFreq = %f\n", maxFreq);
   
-  //return 0;
-
+  // LIGHT PIXELS
+      //pixel.setPixelColor(2,rainbow[vAdjC]);
+      pixel.setPixelColor(2,rainbow[vPix]);
+        //for(i=40;i<60;i++){pixel.setPixelColor(i,rainbow[vAdjC]);}pixel.show();
+      pixel.show();
   delay(6000);
   maxFreq = 0.0;
   }
@@ -103,7 +139,7 @@ void calculateDFT(float *xn, int len) {
             Xi = (Xi - xn[n] * sin(2 * M_PI * k * n / N));
         }
         freq = (k / float(len)) * 1000;
-        Xmag = sqrt(pow(Xr,2)+pow(Xi,2)); // dominant - this entry will contain the frequency for this sampling
+        Xmag = sqrt(pow(Xr,2)+pow(Xi,2)); // dominant - contains the frequency for this sampling
         Xpha = atan2(Xi,Xr);
         Serial.printf("%0.2f, %0.2f, %0.2f\n",freq, Xmag, Xpha);
     }
