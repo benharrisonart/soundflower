@@ -19,7 +19,7 @@ const int PIXELPIN = D2; // for sound2color
 int PIXELDELAY = 40;
 Adafruit_NeoPixel pixel(PIXELCOUNT, SPI1, WS2812B);
 
-const int N = 512; // 512
+const int N = 256; // 512
 const int timeStep = 500; //500
 
 unsigned int currentTime, lastTime;
@@ -45,6 +45,10 @@ int startFreq;
 int newNote;
 int freqNow; // set to freqAtMax in BR function calculateDFT to use setting color
 float ampNow; // set by maxAmplitude in BR function calculateDFT to decide if pixels light based on volume
+float ampWatcher; //set  to track the top of the range when no direct input is applied
+
+
+
 
 //BUTTON
 const int BTNPIN = A5;
@@ -109,10 +113,12 @@ void loop() {
 // END ANIMATION COLOR CYCLE
 /////////////////////////////////////////////
 //digitalWrite(D2,HIGH);
- 
 
+// FOR LEARNING INPUT LEVELS WITH NO INTERACTION
+if (ampNow > ampWatcher){ampWatcher = ampNow;} Serial.printf("Max Amplitude Reached: %0.4f\n",ampWatcher);
 
-    if (ampNow < 9600){
+// CONDENSE INPUT FREQ TO A RANGE OF ONE OCTAVE
+    if (ampNow < 15500){
           Serial.printf("input signal low\n");
           pixel.clear();pixel.show();
     }else{
@@ -196,6 +202,7 @@ void calculateDFT(float *xn, int len, int usec, bool removeBias) {
         }  
         freqNow = freqAtMax; // to use when setting color
         ampNow = maxAmplitude; // if loud enough then light pixels
+
     }
     Serial.printf("\n\nTime: %i - Max amplitude of %0.2f at frequency %i\n",millis(),maxAmplitude,freqAtMax);
 }
